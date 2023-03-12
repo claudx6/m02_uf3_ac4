@@ -118,6 +118,16 @@ button.signin:hover{
 }
 
 /* Sign-in page styles */
+
+p.newuser_ok{
+    color: green;
+}
+
+p.newuser_ko{
+    color:red;
+}
+
+
 /* TBD */
 
 /* Results page styles */

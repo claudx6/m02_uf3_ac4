@@ -16,7 +16,7 @@ def connectBD():
     db = mysql.connector.connect(
         host = "localhost",
         user = "root",
-        passwd = "claumestra",
+        passwd = "python22",
         database = "users"
     )
     return db
@@ -56,10 +56,11 @@ def checkUser(user,password):
     bd=connectBD()
     cursor=bd.cursor()
 
-    query=f"SELECT user,name,surname1,surname2,age,genre FROM users WHERE user='{user}'\
-            AND password='{password}'"
+    query=f"SELECT user,name,surname1,surname2,age,genre FROM users WHERE user= %s\
+            AND password= %s"
+    values=(user,password)
     print(query)
-    cursor.execute(query)
+    cursor.execute(query,values)
     userData = cursor.fetchall()
     bd.close()
     
@@ -68,9 +69,17 @@ def checkUser(user,password):
     else:
         return userData[0]
 
-# cresteUser: crea un nuevo usuario en la BD
+# createUser: crea un nuevo usuario en la BD
 def createUser(user,password,name,surname1,surname2,age,genre):
-    
+    bd=connectBD()
+    cursor=bd.cursor()
+
+    query=f"INSERT INTO users (user,password,name,surname1,surname2,age,genre) VALUES (%s,%s,%s,%s,%s,%s,%s)"
+    values=(user,password,name,surname1,surname2,age,genre)
+    print(query)
+    cursor.execute(query,values)
+    bd.commit()
+    bd.close()
     return
 
 # Secuencia principal: configuración de la aplicación web ##########################################
@@ -89,7 +98,7 @@ def login():
 
 @app.route("/signin")
 def signin():
-    return "SIGN IN PAGE"
+    return render_template("signin.html")
 
 @app.route("/results",methods=('GET', 'POST'))
 def results():
@@ -104,6 +113,25 @@ def results():
         else:
             return render_template("results.html",login=True,userData=userData)
         
+@app.route("/newUser",methods=['POST'])
+def newUser():
+    formData = request.form
+    user=formData['usuari']
+    password=formData['contrasenya']
+    name=formData['nom']
+    surname1=formData['cognom1']
+    surname2=formData['cognom2']
+    age=formData['edat']
+    gender=formData['genere']
+    userData = checkUser(user,password)
+
+    createUser(user,password,name,surname1,surname2,age,gender)
+    if userData == False:
+        return render_template("newUser.html",registered=False)
+    else:
+        return render_template("newUser.html",registered=True,userData=userData)
+
+
 # Configuración y arranque de la aplicación web
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.run(host='localhost', port=5000, debug=True)
